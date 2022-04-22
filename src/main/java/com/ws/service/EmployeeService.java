@@ -4,6 +4,7 @@ import com.ws.model.Employees;
 import com.ws.repository.model.EmployeesEntity;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface EmployeeService {
 
@@ -16,5 +17,7 @@ public interface EmployeeService {
     Boolean validEmployee(String name , String lastName);
 
     Boolean validEmployee(Long employeeId);
+
+    Optional<Employees> findById(Long employeeId);
 
 }

@@ -8,6 +8,7 @@ import com.ws.repository.model.EmployeesEntity;
 import com.ws.service.EmployeeService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Boolean validEmployee(Long employeeId) {
         return employeeRepository.findById(employeeId).isPresent();
+    }
+
+    @Override
+    public Optional<Employees> findById(Long employeeId) {
+        return employeeRepository.findById(employeeId).map(employeeMapper::toModel);
     }
 
 

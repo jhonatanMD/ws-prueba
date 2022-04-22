@@ -1,6 +1,7 @@
 package com.ws.controller;
 
 import com.ws.business.EmployeeBusiness;
+import com.ws.model.dto.AmountPaymentResponse;
 import com.ws.model.dto.AppResponse;
 import com.ws.model.dto.EmployeeRequest;
 import com.ws.model.dto.EmployeeResponse;
@@ -38,9 +39,13 @@ public class EmployeesController {
         return employeeBusiness.findByJob(request);
     }
 
-
     @PostMapping("/wordked-hours")
     public WorkedHoursResponse workedHours(@RequestBody @Valid WorkedHoursRequest request){
         return employeeBusiness.workedHoursByEmployee(request);
+    }
+
+    @PostMapping("/total-payment")
+    public AmountPaymentResponse totalPayments(@RequestBody @Valid WorkedHoursRequest request){
+        return employeeBusiness.totalPaymentsByEmploy(request);
     }
 }

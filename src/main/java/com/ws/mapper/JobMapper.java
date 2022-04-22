@@ -8,4 +8,5 @@ import org.mapstruct.Mapper;
 public interface JobMapper {
 
     Jobs toModel(JobsEntity entity);
+    JobsEntity toEntity(Jobs model);
 }

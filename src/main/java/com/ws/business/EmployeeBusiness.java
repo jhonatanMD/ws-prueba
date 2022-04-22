@@ -1,10 +1,10 @@
 package com.ws.business;
 
 import com.ws.config.error.DefaultException;
-import com.ws.config.error.NotFoundException;
 import com.ws.mapper.EmployeeMapper;
 import com.ws.mapper.EmployeeWorkedHoursMapper;
 import com.ws.model.Employees;
+import com.ws.model.dto.AmountPaymentResponse;
 import com.ws.model.dto.AppResponse;
 import com.ws.model.dto.EmployeeRequest;
 import com.ws.model.dto.EmployeeResponse;
@@ -17,8 +17,10 @@ import com.ws.service.EmployeeWorkedHourService;
 import com.ws.service.GenderService;
 import com.ws.service.JobService;
 import com.ws.util.Utils;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,8 @@ import static com.ws.util.ResponseEnum.LATER_DATE_TO_ENDDATE;
 @RequiredArgsConstructor
 public class EmployeeBusiness {
 
+    private Integer SCALE_2 = 2;
+
     private final EmployeeService employeeService;
     private final GenderService genderService;
     private final JobService jobService;
@@ -40,11 +44,14 @@ public class EmployeeBusiness {
     private final EmployeeMapper employeeMapper;
     private final EmployeeWorkedHoursMapper workedHoursMapper;
 
+    @Value("${config.age}")
+    private int ageLimit;
+
     public AppResponse saveEmployee(EmployeeRequest employee){
 
          int age = LocalDate.now().getYear() - employee.getBirthdate().getYear();
 
-         if(age < 18)
+         if(age < ageLimit)
              throw new DefaultException(EMPLOYEE_IS_MINOR.getMsg());
 
         return genderService.findById(employee.getGenderId())
@@ -53,19 +60,18 @@ public class EmployeeBusiness {
                                 Long id = employeeService.save(employeeMapper.toEntity(employee)).getId();
                                 return Utils.buildReponse(id);
                             })
-                            .orElseThrow(() -> new NotFoundException(JOB_NOT_EXISTS.getMsg())))
-                .orElseThrow(() -> new NotFoundException(GENDERS_NOT_EXISTS.getMsg()));
+                            .orElseThrow(() -> new DefaultException(JOB_NOT_EXISTS.getMsg())))
+                .orElseThrow(() -> new DefaultException(GENDERS_NOT_EXISTS.getMsg()));
 
     }
 
 
     public AppResponse recordWorkingHours(RecordWorkingHoursRequest request){
 
-
         if(!employeeService.validEmployee(request.getEmployeeId()))
             throw new DefaultException(EMPLOYEE_NOT_EXISTS.getMsg());
 
-        if((LocalDate.now().compareTo(request.getWorkedDate()) < 0))
+        if(compareDate(LocalDate.now(),request.getWorkedDate()))
             throw new DefaultException(LATER_DATE.getMsg());
 
         Long id =  employeeWorkedHourService.save(workedHoursMapper.dtoToEntity(request)).getId();
@@ -88,8 +94,7 @@ public class EmployeeBusiness {
 
     public WorkedHoursResponse workedHoursByEmployee (WorkedHoursRequest request) {
 
-
-        if((request.getEndDate().compareTo(request.getStartDate()) < 0))
+        if(compareDate(request.getEndDate(),request.getStartDate()))
             throw new DefaultException(LATER_DATE_TO_ENDDATE.getMsg());
 
         if(!employeeService.validEmployee(request.getEmployeeId()))
@@ -102,4 +107,31 @@ public class EmployeeBusiness {
                 .totalWorkedHours(hours)
                 .success(Boolean.TRUE).build();
     }
+
+    public AmountPaymentResponse totalPaymentsByEmploy (WorkedHoursRequest request) {
+
+        if(compareDate(request.getEndDate(),request.getStartDate()))
+            throw new DefaultException(LATER_DATE_TO_ENDDATE.getMsg());
+
+        BigDecimal payment = employeeService.findById(request.getEmployeeId()).flatMap(e ->  jobService.findById(e.getJob().getId())
+                .map(j -> {
+                    BigDecimal hours = employeeWorkedHourService.workedHoursByEmployee(request.getEmployeeId(),
+                        request.getStartDate(),request.getEndDate());
+                    return j.getSalary().multiply(hours);
+            })).orElseThrow(() -> new DefaultException(EMPLOYEE_NOT_EXISTS.getMsg()));
+
+        return AmountPaymentResponse.builder()
+                .payment(payment.setScale(SCALE_2, RoundingMode.HALF_UP))
+                .success(Boolean.TRUE).build();
+    }
+
+
+
+
+    public boolean compareDate(LocalDate date1 , LocalDate date2){
+        return (date1.compareTo(date2) < 0);
+    }
 }
+
+
+

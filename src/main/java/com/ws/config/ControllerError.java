@@ -38,8 +38,7 @@ public class ControllerError extends ResponseEntityExceptionHandler {
             errors.put(fieldName, message);
         });
 
-
-        return new ResponseEntity<Object>(buildReponseError(errors), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<Object>(buildReponseError(errors.values()), HttpStatus.BAD_REQUEST);
     }
 
     @ResponseStatus(HttpStatus.OK)

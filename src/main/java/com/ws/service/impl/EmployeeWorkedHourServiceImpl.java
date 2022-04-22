@@ -6,6 +6,7 @@ import com.ws.model.EmployeeWorkedHours;
 import com.ws.repository.EmployeeWorkedHourRepository;
 import com.ws.repository.model.EmployeeWorkedHoursEntity;
 import com.ws.service.EmployeeWorkedHourService;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,22 +22,24 @@ public class EmployeeWorkedHourServiceImpl implements EmployeeWorkedHourService 
     private final EmployeeWorkedHourRepository employeeWorkedHourRepository;
     private final EmployeeWorkedHoursMapper employeeWorkedHoursMapper;
 
-    private final BigDecimal totalHours = new BigDecimal(20);
+    @Value("${config.daily-time-limit}")
+    private BigDecimal daylyTimeLimit;
 
 
     @Override
     public EmployeeWorkedHours save(EmployeeWorkedHoursEntity employeeWorkedHours) {
 
-        BigDecimal workedHours =  employeeWorkedHourRepository.sumHours(employeeWorkedHours.getEmployeeId().getId());
+        BigDecimal workedHours =  employeeWorkedHourRepository.sumHoursStartDateToEndDate(employeeWorkedHours.getEmployeeId().getId(),
+                employeeWorkedHours.getWorkedDate(),null);
 
         if(workedHours == null)
             workedHours = BigDecimal.ZERO;
 
 
-        if(workedHours.compareTo(totalHours) == 0)
+        if(workedHours.compareTo(daylyTimeLimit) == 0)
             throw new DefaultException(HOURS_COMPLETED.getMsg());
 
-        if(workedHours.add(employeeWorkedHours.getWorkedHours()).compareTo(totalHours) == 1)
+        if(workedHours.add(employeeWorkedHours.getWorkedHours()).compareTo(daylyTimeLimit) == 1)
             throw new DefaultException(HOURS_EXECEEDS.getMsg());
 
 
