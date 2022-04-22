@@ -10,12 +10,15 @@ import com.ws.model.dto.EmployeeRequest;
 import com.ws.model.dto.EmployeeResponse;
 import com.ws.model.dto.JobRequest;
 import com.ws.model.dto.RecordWorkingHoursRequest;
+import com.ws.model.dto.WorkedHoursRequest;
+import com.ws.model.dto.WorkedHoursResponse;
 import com.ws.service.EmployeeService;
 import com.ws.service.EmployeeWorkedHourService;
 import com.ws.service.GenderService;
 import com.ws.service.JobService;
 import com.ws.util.Utils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ import static com.ws.util.ResponseEnum.EMPLOYEE_NOT_EXISTS;
 import static com.ws.util.ResponseEnum.GENDERS_NOT_EXISTS;
 import static com.ws.util.ResponseEnum.JOB_NOT_EXISTS;
 import static com.ws.util.ResponseEnum.LATER_DATE;
+import static com.ws.util.ResponseEnum.LATER_DATE_TO_ENDDATE;
 
 @RequiredArgsConstructor
 public class EmployeeBusiness {
@@ -78,6 +82,24 @@ public class EmployeeBusiness {
 
         return EmployeeResponse.builder()
                 .employees(employees)
+                .success(Boolean.TRUE).build();
+    }
+
+
+    public WorkedHoursResponse workedHoursByEmployee (WorkedHoursRequest request) {
+
+
+        if((request.getEndDate().compareTo(request.getStartDate()) < 0))
+            throw new DefaultException(LATER_DATE_TO_ENDDATE.getMsg());
+
+        if(!employeeService.validEmployee(request.getEmployeeId()))
+            throw new DefaultException(EMPLOYEE_NOT_EXISTS.getMsg());
+
+        BigDecimal hours = employeeWorkedHourService.workedHoursByEmployee(request.getEmployeeId(),
+                request.getStartDate(),request.getEndDate());
+
+        return WorkedHoursResponse.builder()
+                .totalWorkedHours(hours)
                 .success(Boolean.TRUE).build();
     }
 }

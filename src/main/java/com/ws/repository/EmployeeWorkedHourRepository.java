@@ -19,5 +19,7 @@ public interface EmployeeWorkedHourRepository extends JpaRepository<EmployeeWork
     @Query("SELECT SUM(e.workedHours) FROM EmployeeWorkedHoursEntity e where e.employeeId.id = ?1 ")
     BigDecimal sumHours(Long employeeId);
 
+    @Query("SELECT SUM(e.workedHours) FROM EmployeeWorkedHoursEntity e where e.employeeId.id = ?1 and e.workedDate BETWEEN ?2 AND ?3")
+    BigDecimal sumHoursStartDateToEndDate(Long employeeId,LocalDate startDate,LocalDate endDate);
 
 }

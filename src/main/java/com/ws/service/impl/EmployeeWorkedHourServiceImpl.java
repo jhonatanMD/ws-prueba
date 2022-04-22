@@ -8,10 +8,12 @@ import com.ws.repository.model.EmployeeWorkedHoursEntity;
 import com.ws.service.EmployeeWorkedHourService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 
 import static com.ws.util.ResponseEnum.HOURS_COMPLETED;
 import static com.ws.util.ResponseEnum.HOURS_EXECEEDS;
+import static com.ws.util.ResponseEnum.TIME_NOT_REGISTER;
 
 @RequiredArgsConstructor
 public class EmployeeWorkedHourServiceImpl implements EmployeeWorkedHourService {
@@ -45,4 +47,16 @@ public class EmployeeWorkedHourServiceImpl implements EmployeeWorkedHourService 
         }).orElseGet(() -> employeeWorkedHourRepository.save(employeeWorkedHours)));
 
     }
+
+    @Override
+    public BigDecimal workedHoursByEmployee(Long employeeId, LocalDate startDate, LocalDate endDate) {
+
+        BigDecimal hours = employeeWorkedHourRepository.sumHoursStartDateToEndDate(employeeId,startDate,endDate);
+
+        if(hours == null)
+            throw new DefaultException(TIME_NOT_REGISTER.getMsg());
+
+        return hours;
+    }
+
 }
