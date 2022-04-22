@@ -23,7 +23,7 @@ git clone https://github.com/jhonatanMD/ws-prueba.git
 
 _Dirigirse al IDE y importar el archivo_
 
-_En la ruta del proyeceto ejecutar el siguiente comando para bajar las dependencias y luego dar un Build_
+_En la ruta del proyecto ejecutar el siguiente comando para bajar las dependencias y luego dar un Build_
 
 ```
 mvn clean install
